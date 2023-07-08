@@ -16,7 +16,19 @@ namespace Fontify.Services
     {
         private static readonly AsyncLazy<ClassifierExtension> instance;
         static ClassifierExtension() => instance = new AsyncLazy<ClassifierExtension>(CreateInstanceAsync, ThreadHelper.JoinableTaskFactory);
-        private static async Task<ClassifierExtension> CreateInstanceAsync() => await Task.FromResult(new ClassifierExtension());
+        private static async Task<ClassifierExtension> CreateInstanceAsync()
+        {
+            var settingsProvider = await FontSettingsService.GetInstanceAsync(true);
+            return await Task.FromResult(new ClassifierExtension
+            {
+                normalTypeface = settingsProvider.GetTypeface(FontOverrides.Normal),
+                boldTypeface = settingsProvider.GetTypeface(FontOverrides.Bold),
+                italicTypeface = settingsProvider.GetTypeface(FontOverrides.Italic),
+                bolditalicTypeface = settingsProvider.GetTypeface(FontOverrides.BoldItalic),
+                italicClassifiers = settingsProvider.GetItalicClassifiers()
+            });
+        }
+
         public static async Task<ClassifierExtension> GetInstanceAsync() => await instance.GetValueAsync();
         public static ClassifierExtension Instance => instance.GetValue();
 
@@ -26,21 +38,7 @@ namespace Fontify.Services
         private Typeface italicTypeface;
         private Typeface bolditalicTypeface;
         private string[] italicClassifiers;
-        private ClassifierExtension()
-        {
-            normalTypeface = new Typeface("JetBrains Mono Regular");
-            boldTypeface = new Typeface("JetBrains Mono ExtraBold");
-            italicTypeface = new Typeface("JetBrains Mono ExtraLight Italic");
-            bolditalicTypeface = new Typeface("JetBrains Mono Italic");
-            italicClassifiers = new string[] {
-                PredefinedClassificationTypeNames.Comment,
-                PredefinedClassificationTypeNames.String,
-                "interface name",
-                "keyword - control",
-                "method name",
-                "namespace name"
-            };
-        }
+        private ClassifierExtension() { }
 
         public async Task OverrideFormatMapAsync(IClassificationTypeRegistryService ctrs, IClassificationFormatMapService cfms)
         {
@@ -59,7 +57,7 @@ namespace Fontify.Services
                     var propertyUpdates = await UpdatePropertiesAsync(cfm);
 
                     cfm.BeginBatchUpdate();
-                    propertyUpdates.ForEach(item => cfm.SetExplicitTextProperties(item.ct, item.props));
+                    propertyUpdates.ForEach(item => cfm.SetTextProperties(item.ct, item.props));
                     cfm.EndBatchUpdate();
                 }
                 catch (Exception ex)

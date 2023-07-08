@@ -1,23 +1,39 @@
-﻿using Microsoft.VisualStudio.Text.Classification;
+﻿using Fontify.Services;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Fontify
 {
-    [Export(typeof(IWpfTextViewCreationListener))]
+    [Export(typeof(ITextViewCreationListener))]
     [ContentType(StandardContentTypeNames.Code)]
     [TextViewRole(PredefinedTextViewRoles.Document)]
-    internal class TextViewCreationListener : IWpfTextViewCreationListener
+    internal class TextViewCreationListener : ITextViewCreationListener
     {
         [Import] private IClassificationTypeRegistryService ctrs { get; set; }
         [Import] private IClassificationFormatMapService cfms { get; set; }
 
-        private readonly ClassifierExtension service = ClassifierExtension.GetInstance();
+        private bool hasExecuted = false;
 
-        public void TextViewCreated(IWpfTextView textView)
+        private async Task OverrideAsync()
         {
-            service.OverrideFormatMap(ctrs, cfms);
+            var service = await ClassifierExtension.GetInstanceAsync();
+            await service.OverrideFormatMapAsync(ctrs, cfms);
+        }
+
+        public void TextViewCreated(ITextView textView)
+        {
+            if (!hasExecuted)
+            {
+                _ = ThreadHelper.JoinableTaskFactory.RunAsync(OverrideAsync);
+                hasExecuted = true;
+            }
         }
     }
 }
