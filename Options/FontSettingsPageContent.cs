@@ -1,13 +1,6 @@
 ﻿using Fontify.Services;
-using System.Windows.Media;
-using System.Windows.Forms;
-using System.Linq;
-using System.Windows;
 using System.Collections.Generic;
-using System;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell;
-using Fontify.Tools;
+using System.Windows.Forms;
 
 namespace Fontify.Options
 {

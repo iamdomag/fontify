@@ -1,14 +1,4 @@
-﻿using Fontify.Services;
-using Microsoft.VisualStudio.Shell.Interop;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing.Text;
-using System.Linq;
-using System.Reflection;
-using System.Windows.Media;
-
-namespace Fontify.Options
+﻿namespace Fontify.Options
 {
     partial class FontSettingsPageContent
     {

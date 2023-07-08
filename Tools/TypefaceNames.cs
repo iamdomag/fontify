@@ -1,12 +1,9 @@
 ﻿using Fontify.Services;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.ComponentModel.TypeConverter;
 using System.Windows.Media;
+using System.Composition.Convention;
 
 namespace Fontify.Tools
 {
@@ -22,9 +19,11 @@ namespace Fontify.Tools
 
             if (!string.IsNullOrEmpty(settings.BaseFontFamily))
             {
-                typefaces = Fonts.SystemTypefaces
-                    .Where(x => x.FontFamily.Source != settings.BaseFontFamily)
+                var fontFamily = new FontFamily(settings.BaseFontFamily);
+                typefaces = fontFamily.GetTypefaces()
                     .Select(x => $"{settings.BaseFontFamily} {x.FaceNames.FirstOrDefault().Value}")
+                    .Distinct()
+                    .OrderBy(x => x)
                     .ToList();
             }
 

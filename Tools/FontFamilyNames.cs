@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace Fontify.Tools
@@ -15,6 +12,7 @@ namespace Fontify.Tools
         {
             _familyNames = Fonts.SystemFontFamilies
                 .Select(x => x.Source)
+                .OrderBy(x => x)
                 .ToList();
         }
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;

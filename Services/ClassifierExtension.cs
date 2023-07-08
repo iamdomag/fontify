@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Formatting;
@@ -7,8 +6,8 @@ using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Media;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace Fontify.Services
 {
