@@ -1,5 +1,6 @@
-﻿using Fontify.Tools;
+﻿using Fontify.Options.PropertyGridEx;
 using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace Fontify.Services
 {
@@ -8,27 +9,27 @@ namespace Fontify.Services
     {        
         [Category("Font Defaults")]
         [DisplayName("Font Family")]
-        [TypeConverter(typeof(FontFamilyNames))]
+        [Editor(typeof(FontListEditor), typeof(UITypeEditor))]
         public string BaseFontFamily { get; set; }
 
         [Category("Font Defaults")]
         [DisplayName("Normal")]
-        [TypeConverter(typeof(TypefaceNames))]
+        [Editor(typeof(FontListEditor), typeof(UITypeEditor))]
         public string NormalTypeface { get; set; }
 
         [Category("Font Defaults")]
         [DisplayName("Bold")]
-        [TypeConverter(typeof(TypefaceNames))]
+        [Editor(typeof(FontListEditor), typeof(UITypeEditor))]
         public string BoldTypeface { get; set; }
 
         [Category("Font Defaults")]
         [DisplayName("Italic")]
-        [TypeConverter(typeof(TypefaceNames))]
+        [Editor(typeof(FontListEditor), typeof(UITypeEditor))]
         public string ItalicTypeface { get; set; }
 
         [Category("Font Defaults")]
         [DisplayName("BolcItalic")]
-        [TypeConverter(typeof(TypefaceNames))]
+        [Editor(typeof(FontListEditor), typeof(UITypeEditor))]
         public string BoldItalicTypeface { get; set; }
 
         [Category("Settings")]

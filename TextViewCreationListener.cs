@@ -4,16 +4,16 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Fontify
 {
-    [Export(typeof(ITextViewCreationListener))]
+    [Export(typeof(IWpfTextViewCreationListener))]
     [ContentType(StandardContentTypeNames.Code)]
     [TextViewRole(PredefinedTextViewRoles.Document)]
-    internal class TextViewCreationListener : ITextViewCreationListener
+    internal class TextViewCreationListener : IWpfTextViewCreationListener
     {
-        [Import] private IClassificationTypeRegistryService ctrs { get; set; }
         [Import] private IClassificationFormatMapService cfms { get; set; }
 
         private bool hasExecuted = false;
@@ -21,10 +21,10 @@ namespace Fontify
         private async Task OverrideAsync()
         {
             var service = await ClassifierExtension.GetInstanceAsync();
-            await service.OverrideFormatMapAsync(ctrs, cfms);
+            await service.OverrideFormatMapAsync(cfms);
         }
 
-        public void TextViewCreated(ITextView textView)
+        public void TextViewCreated(IWpfTextView textView)
         {
             if (!hasExecuted)
             {

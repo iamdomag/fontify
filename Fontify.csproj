@@ -55,14 +55,13 @@
     <Compile Include="Options\FontSettingsPageContent.Designer.cs">
       <DependentUpon>FontSettingsPageContent.cs</DependentUpon>
     </Compile>
+    <Compile Include="Options\PropertyGridEx\FontListEditor.cs" />
     <Compile Include="Services\ClassifierExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FontifyPackage.cs" />
     <Compile Include="Services\FontSettings.cs" />
     <Compile Include="TextViewCreationListener.cs" />
     <Compile Include="Services\FontSettingsService.cs" />
-    <Compile Include="Tools\FontFamilyNames.cs" />
-    <Compile Include="Tools\TypefaceNames.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">

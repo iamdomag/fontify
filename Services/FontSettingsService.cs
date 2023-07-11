@@ -67,8 +67,43 @@ namespace Fontify.Services
             {
                 Array.ForEach(FontSettingsProperties, props =>
                 {
-                    var propertyValue = settingsStore.GetString(CollectionPath, props.Name);
-                    props.SetValue(settings, propertyValue);
+                    if (settingsStore.PropertyExists(CollectionPath, props.Name))
+                    {
+                        var typeName = props.PropertyType.Name;
+                        object propertyValue = null;
+
+                        if (props.PropertyType.IsGenericType && props.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        {
+                            var nullableType = Nullable.GetUnderlyingType(props.PropertyType);
+                            typeName = nullableType.Name;
+                        }
+
+                        switch (typeName)
+                        {
+                            case nameof(Boolean):
+                                propertyValue = settingsStore.GetBoolean(CollectionPath, props.Name);
+                                break;
+                            case nameof(Int32):
+                                propertyValue = settingsStore.GetInt32(CollectionPath, props.Name);
+                                break;
+                            case nameof(Double):
+                                var stringValue = settingsStore.GetString(CollectionPath, props.Name);
+                                if (double.TryParse(stringValue, out double doubleValue))
+                                {
+                                    propertyValue = doubleValue;
+                                }
+                                else
+                                {
+                                    propertyValue = null;
+                                }
+                                break;
+                            default:
+                                propertyValue = settingsStore.GetString(CollectionPath, props.Name);
+                                break;
+                        }
+
+                        props.SetValue(settings, propertyValue);
+                    }
                 });
             }
         }
@@ -85,8 +120,23 @@ namespace Fontify.Services
 
             Array.ForEach(FontSettingsProperties, props =>
             {
-                var propertyValue = props.GetValue(settings) as string;
-                settingsStore.SetString(CollectionPath, props.Name, propertyValue);
+                var propertyValue = props.GetValue(settings);
+
+                switch (propertyValue)
+                {
+                    case bool booleanValue:
+                        settingsStore.SetBoolean(CollectionPath, props.Name, booleanValue);
+                        break;
+                    case int intValue:
+                        settingsStore.SetInt32(CollectionPath, props.Name, intValue);
+                        break;
+                    case double doubleValue:
+                        settingsStore.SetString(CollectionPath, props.Name, doubleValue.ToString());
+                        break;
+                    default:
+                        settingsStore.SetString(CollectionPath, props.Name, propertyValue.ToString());
+                        break;
+                }
             });
         }
 
@@ -104,12 +154,12 @@ namespace Fontify.Services
                     case FontOverrides.Normal:
                         typeface = !string.IsNullOrEmpty(settings.NormalTypeface) ?
                             new Typeface(settings.NormalTypeface) :
-                            new Typeface(defaultFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+                            new Typeface(defaultFontFamily, FontStyles.Normal, FontWeights.Regular, FontStretches.Normal);
                         break;
                     case FontOverrides.Bold:
                         typeface = !string.IsNullOrEmpty(settings.BoldTypeface) ?
                             new Typeface(settings.BoldTypeface) :
-                            new Typeface(defaultFontFamily, FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+                            new Typeface(defaultFontFamily, FontStyles.Normal, FontWeights.ExtraBold, FontStretches.Normal);
                         break;
                     case FontOverrides.Italic:
                         typeface = !string.IsNullOrEmpty(settings.ItalicTypeface) ?
@@ -119,7 +169,7 @@ namespace Fontify.Services
                     case FontOverrides.BoldItalic:
                         typeface = !string.IsNullOrEmpty(settings.BoldItalicTypeface) ?
                             new Typeface(settings.BoldItalicTypeface) :
-                            new Typeface(defaultFontFamily, FontStyles.Italic, FontWeights.Bold, FontStretches.Normal);
+                            new Typeface(defaultFontFamily, FontStyles.Italic, FontWeights.SemiBold, FontStretches.Normal);
                         break;
                 }
             }

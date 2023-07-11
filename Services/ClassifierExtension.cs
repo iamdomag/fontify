@@ -1,10 +1,12 @@
 ﻿using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Formatting;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -39,7 +41,7 @@ namespace Fontify.Services
         private string[] italicClassifiers;
         private ClassifierExtension() { }
 
-        public async Task OverrideFormatMapAsync(IClassificationTypeRegistryService ctrs, IClassificationFormatMapService cfms)
+        public async Task OverrideFormatMapAsync(IClassificationFormatMapService cfms)
         {
             if (!IsExecuting)
             {
@@ -48,11 +50,10 @@ namespace Fontify.Services
                     IsExecuting = true;
 
                     var cfm = cfms.GetClassificationFormatMap(category: "text");
-
                     var defaultProps = cfm.DefaultTextProperties
                         .SetTypeface(normalTypeface);
                     cfm.DefaultTextProperties = defaultProps;
-
+                    
                     var propertyUpdates = await UpdatePropertiesAsync(cfm);
 
                     cfm.BeginBatchUpdate();
@@ -79,7 +80,7 @@ namespace Fontify.Services
                 .Where(x => x != default)
                 .Select(x => new {
                     Name = x.Classification,
-                    Properties = cfm.GetExplicitTextProperties(x),
+                    Properties = cfm.GetTextProperties(x),
                     ClassificationType = x })
                 .Where(x => x.Properties.Bold || x.Properties.Italic || italicClassifiers.Contains(x.Name));
 
@@ -87,7 +88,7 @@ namespace Fontify.Services
             {
                 try
                 {
-                    var isItalic = italicClassifiers.Contains(item.Name);
+                    var isItalic = italicClassifiers.Contains(item.Name) || item.Properties.Italic;
                     var isBold = item.Properties.Bold;
                     var isBoldItalic = isBold && isItalic;
                     var typeface =
@@ -98,7 +99,15 @@ namespace Fontify.Services
 
                     if (typeface != default)
                     {
-                        updatedItems.Add((item.ClassificationType, item.Properties.SetTypeface(typeface)));
+                        var props = item.Properties
+                            .SetTypeface(typeface);
+
+                        if (isItalic)
+                        {
+                            props = props.SetItalic(true);
+                        }
+
+                        updatedItems.Add((item.ClassificationType, props));                        
                     }
                 }
                 catch (Exception ex)
