@@ -1,12 +1,10 @@
 ﻿using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Formatting;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -41,6 +39,7 @@ namespace Fontify.Services
         private string[] italicClassifiers;
         private ClassifierExtension() { }
 
+        public bool IsDone => IsExecuting;
         public async Task OverrideFormatMapAsync(IClassificationFormatMapService cfms)
         {
             if (!IsExecuting)
@@ -55,7 +54,7 @@ namespace Fontify.Services
                     cfm.DefaultTextProperties = defaultProps;
                     
                     var propertyUpdates = await UpdatePropertiesAsync(cfm);
-
+                    
                     cfm.BeginBatchUpdate();
                     propertyUpdates.ForEach(item => cfm.SetTextProperties(item.ct, item.props));
                     cfm.EndBatchUpdate();
@@ -99,14 +98,9 @@ namespace Fontify.Services
 
                     if (typeface != default)
                     {
-                        var props = item.Properties
-                            .SetTypeface(typeface);
+                        var props = item.Properties.SetTypeface(typeface);
 
-                        if (isItalic)
-                        {
-                            props = props.SetItalic(true);
-                        }
-
+                        props = isItalic ? props.SetItalic(true) : props;
                         updatedItems.Add((item.ClassificationType, props));                        
                     }
                 }

@@ -37,7 +37,7 @@
             this.SettingsGrid.Location = new System.Drawing.Point(0, 0);
             this.SettingsGrid.Name = "SettingsGrid";
             this.SettingsGrid.PropertySort = System.Windows.Forms.PropertySort.Categorized;
-            this.SettingsGrid.Size = new System.Drawing.Size(685, 540);
+            this.SettingsGrid.Size = new System.Drawing.Size(610, 580);
             this.SettingsGrid.TabIndex = 0;
             this.SettingsGrid.ToolbarVisible = false;
             this.SettingsGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.SettingsGrid_PropertyValueChanged);
@@ -48,7 +48,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.SettingsGrid);
             this.Name = "FontSettingsPageContent";
-            this.Size = new System.Drawing.Size(685, 540);
+            this.Size = new System.Drawing.Size(610, 580);
             this.ResumeLayout(false);
 
         }

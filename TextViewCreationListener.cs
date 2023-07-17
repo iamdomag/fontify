@@ -1,11 +1,13 @@
 ﻿using Fontify.Services;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Fontify
 {
@@ -15,14 +17,8 @@ namespace Fontify
     internal class TextViewCreationListener : IWpfTextViewCreationListener
     {
         [Import] private IClassificationFormatMapService cfms { get; set; }
-
+        
         private bool hasExecuted = false;
-
-        private async Task OverrideAsync()
-        {
-            var service = await ClassifierExtension.GetInstanceAsync();
-            await service.OverrideFormatMapAsync(cfms);
-        }
 
         public void TextViewCreated(IWpfTextView textView)
         {
@@ -31,6 +27,12 @@ namespace Fontify
                 _ = ThreadHelper.JoinableTaskFactory.RunAsync(OverrideAsync);
                 hasExecuted = true;
             }
+        }
+
+        private async Task OverrideAsync()
+        {
+            var service = await ClassifierExtension.GetInstanceAsync();            
+            await service.OverrideFormatMapAsync(cfms);            
         }
     }
 }

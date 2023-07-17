@@ -1,9 +1,17 @@
-﻿using Microsoft.VisualStudio.Settings;
+﻿using Microsoft.Internal.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell.Settings;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
+using Microsoft.VisualStudio.Utilities;
 using System;
+using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -69,13 +77,13 @@ namespace Fontify.Services
                 {
                     if (settingsStore.PropertyExists(CollectionPath, props.Name))
                     {
-                        var typeName = props.PropertyType.Name;
+                        var type = props.PropertyType;
                         object propertyValue = null;
+                        var typeName = type.Name;
 
-                        if (props.PropertyType.IsGenericType && props.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        if (typeName == typeof(Nullable<>).Name)
                         {
-                            var nullableType = Nullable.GetUnderlyingType(props.PropertyType);
-                            typeName = nullableType.Name;
+                            typeName = Nullable.GetUnderlyingType(type).Name;
                         }
 
                         switch (typeName)
@@ -85,17 +93,6 @@ namespace Fontify.Services
                                 break;
                             case nameof(Int32):
                                 propertyValue = settingsStore.GetInt32(CollectionPath, props.Name);
-                                break;
-                            case nameof(Double):
-                                var stringValue = settingsStore.GetString(CollectionPath, props.Name);
-                                if (double.TryParse(stringValue, out double doubleValue))
-                                {
-                                    propertyValue = doubleValue;
-                                }
-                                else
-                                {
-                                    propertyValue = null;
-                                }
                                 break;
                             default:
                                 propertyValue = settingsStore.GetString(CollectionPath, props.Name);

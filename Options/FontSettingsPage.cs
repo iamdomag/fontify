@@ -26,7 +26,7 @@ namespace Fontify.Options
             get
             {
                 var content = new FontSettingsPageContent();
-                content.Initialize(this, service);
+                content.Initialize(service);
                 return content;
             }
         }
