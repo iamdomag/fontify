@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="Fontify.68514b20-7cd5-4bec-81ab-024e0d815aeb" Version="1.0" Language="en-US" Publisher="Paul June Domag" />
+        <Identity Id="Fontify.68514b20-7cd5-4bec-81ab-024e0d815aea" Version="1.0" Language="en-US" Publisher="Paul June Domag" />
         <DisplayName>Fontify</DisplayName>
         <Description xml:space="preserve">Fontify is an extension that lets you customize the fonts used in Visual Studio editor. It overrides the default font and allows you to choose from a variety of fonts for your code. You can also mix and match different fonts and apply it on different parts of your code, such as comments, keywords, strings, etc. creating a unique and personalized look for your editor.</Description>
         <Preview>true</Preview>
