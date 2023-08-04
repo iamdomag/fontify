@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using System;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
@@ -101,6 +102,20 @@ namespace Fontify.Services
 
                         props.SetValue(settings, propertyValue);
                     }
+                });
+            } else
+            {
+                Array.ForEach(FontSettingsProperties, props =>
+                {
+                    object propertyValue = null;
+                    var defaultAtt = (DefaultValueAttribute)props.GetCustomAttribute(typeof(DefaultValueAttribute));
+
+                    if (defaultAtt != null)
+                    {
+                        propertyValue = defaultAtt.Value;
+                    }
+
+                    props.SetValue(settings, propertyValue);
                 });
             }
         }
