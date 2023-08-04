@@ -15,6 +15,7 @@ namespace Fontify.Options.PropertyGridEx
         public List<string> fontFamilyNames;
         public event EventHandler SelectionChanged;
         public object SelectedItem => FontNamesList.SelectedItem;
+        private const string DefaultFontFamily = "default";
 
         public FontDropdown()
         {
@@ -25,26 +26,38 @@ namespace Fontify.Options.PropertyGridEx
             InitializeComponent();
         }
 
-        public void LoadFonts(string currentFont, string fontFamily = null)
+        public void LoadFonts(string currentFont, string fontFamily = DefaultFontFamily)
         {
             List<string> sourceData;
 
-            if (string.IsNullOrEmpty(fontFamily))
+            if (fontFamily == DefaultFontFamily)
             {
                 sourceData = fontFamilyNames;
             }
-            else
+            else if (!string.IsNullOrEmpty(fontFamily))
             {
                 var baseFont = new FontFamily(fontFamily);
                 sourceData = baseFont.GetTypefaces()
                     .Select(x => $"{fontFamily} {x.FaceNames.FirstOrDefault().Value}")
                     .ToList();
+            } else
+            {
+                sourceData = new List<string>();
             }
-            
+
             FontNamesList.ItemsSource = sourceData;
-            FontNamesList.ScrollIntoView(sourceData.Last());
-            FontNamesList.SelectedIndex = sourceData.IndexOf(currentFont);
-            FontNamesList.ScrollIntoView(FontNamesList.SelectedItem);
+
+            if (string.IsNullOrEmpty(currentFont))
+            {
+                FontNamesList.SelectedIndex = sourceData.Any() ? 0 : -1;
+            }
+            else
+            {
+                FontNamesList.ScrollIntoView(sourceData.Last());
+                FontNamesList.SelectedIndex = sourceData.IndexOf(currentFont);
+                FontNamesList.ScrollIntoView(FontNamesList.SelectedItem);
+            }
+
             FontNamesList.Focus();
         }
 
