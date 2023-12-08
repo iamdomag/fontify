@@ -15,15 +15,15 @@ namespace Fontify.Options
 {
     public partial class FontSettingsPageContent : UserControl
     {
-        private FontSettings settings;
+        private FontSettings _settings;
         public FontSettingsPageContent()
         {
             InitializeComponent();
         }
 
-        internal void Initialize(FontSettingsService settingsService)
+        internal void Initialize(FontSettings settings)
         {
-            settings = settingsService.Settings;
+            _settings = settings;
             SettingsGrid.SelectedObject = settings;
         }
 
@@ -34,17 +34,17 @@ namespace Fontify.Options
                 var baseFontName = e.ChangedItem.Value.ToString();
                 if (!string.IsNullOrEmpty(baseFontName))
                 {
-                    settings.NormalTypeface = baseFontName;
-                    settings.BoldTypeface = baseFontName;
-                    settings.ItalicTypeface = baseFontName;
-                    settings.BoldItalicTypeface = baseFontName;
+                    _settings.NormalTypeface = baseFontName;
+                    _settings.BoldTypeface = baseFontName;
+                    _settings.ItalicTypeface = baseFontName;
+                    _settings.BoldItalicTypeface = baseFontName;
                 }
                 else
                 {
-                    settings.BoldTypeface = string.Empty;
-                    settings.ItalicTypeface = string.Empty;
-                    settings.NormalTypeface = string.Empty;
-                    settings.BoldItalicTypeface = string.Empty;
+                    _settings.BoldTypeface = string.Empty;
+                    _settings.ItalicTypeface = string.Empty;
+                    _settings.NormalTypeface = string.Empty;
+                    _settings.BoldItalicTypeface = string.Empty;
                 }
             }
         }

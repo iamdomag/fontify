@@ -1,14 +1,8 @@
-﻿using Microsoft.Internal.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Settings;
+﻿using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell.Settings;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudio.Utilities;
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
@@ -22,119 +16,38 @@ namespace Fontify.Services
 {
     internal class FontSettingsService
     {
-        private static readonly AsyncLazy<FontSettingsService> liveInstance;
+        private static readonly Lazy<FontSettingsService> _lazy;
+        static FontSettingsService() => _lazy = new Lazy<FontSettingsService>(() => new FontSettingsService());
 
-        static FontSettingsService() => liveInstance = new AsyncLazy<FontSettingsService>(CreateInstanceAsync, ThreadHelper.JoinableTaskFactory);
-
-        private static async Task<FontSettingsService> CreateInstanceAsync() => await Task.FromResult(new FontSettingsService());
-
-        public static FontSettingsService GetInstance() => liveInstance.GetValue();
-
-        public static async Task<FontSettingsService> GetInstanceAsync(bool loadStorage = false)
+        public static async Task<FontSettingsService> GetInstanceAsync(bool loadStorage = false, FontSettings settings = null)
         {
-            var instance = await liveInstance.GetValueAsync();
-            if (loadStorage && !instance.settingsLoaded)
+            var instance = _lazy.Value;
+
+            instance.Settings = settings ?? instance.Settings;
+            if (loadStorage && instance.Settings == null)
             {
-                await instance.LoadStorageAsync();
+                await instance.LoadSettingsAsync();
             }
 
             return instance;
         }
 
-        private readonly AsyncLazy<ShellSettingsManager> settingsManager;
-        private readonly FontSettings settings;
-        private const string CollectionPath = "Fontify\\FontSettings";
-        private bool settingsLoaded = false;
-        public string DefaultFontFamily { get; set; } = "Consolas";
-        public FontSettings Settings => settings;
-        private PropertyInfo[] FontSettingsProperties;
+        private FontSettings _settings = null;
+        private SettingsStorage<FontSettings> _fontSettingsStorage;
+        public FontSettings Settings
+        {
+            get => _settings;
+            private set => _settings = value;
+        }
 
         private FontSettingsService()
         {
-            settings = new FontSettings();
-            settingsManager = new AsyncLazy<ShellSettingsManager>(GetShellSettingsManagerAsync, ThreadHelper.JoinableTaskFactory);
-            FontSettingsProperties = typeof(FontSettings)
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .ToArray();
+            _fontSettingsStorage = new SettingsStorage<FontSettings>();
         }
 
-        private async Task<ShellSettingsManager> GetShellSettingsManagerAsync()
+        private async Task LoadSettingsAsync()
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            var service = await AsyncServiceProvider.GlobalProvider.GetServiceAsync(typeof(SVsSettingsManager)) as IVsSettingsManager;
-
-            return new ShellSettingsManager(service);
-        }
-
-        public async Task LoadStorageAsync()
-        {
-            var settingsManager = await this.settingsManager.GetValueAsync();
-            var settingsStore = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-
-            if (settingsStore.CollectionExists(CollectionPath))
-            {
-                Array.ForEach(FontSettingsProperties, props =>
-                {
-                    if (settingsStore.PropertyExists(CollectionPath, props.Name))
-                    {
-                        var type = props.PropertyType;
-                        object propertyValue = null;
-                        var typeName = type.Name;
-
-                        if (typeName == typeof(Nullable<>).Name)
-                        {
-                            typeName = Nullable.GetUnderlyingType(type).Name;
-                        }
-
-                        switch (typeName)
-                        {
-                            case nameof(Boolean):
-                                propertyValue = settingsStore.GetBoolean(CollectionPath, props.Name);
-                                break;
-                            case nameof(Int32):
-                                propertyValue = settingsStore.GetInt32(CollectionPath, props.Name);
-                                break;
-                            default:
-                                propertyValue = settingsStore.GetString(CollectionPath, props.Name);
-                                break;
-                        }
-
-                        props.SetValue(settings, propertyValue);
-                    }
-                });
-            }
-        }
-
-        public async Task SaveStorageAsync()
-        {
-            var settingsManager = await this.settingsManager.GetValueAsync();
-            var settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
-
-            if (!settingsStore.CollectionExists(CollectionPath))
-            {
-                settingsStore.CreateCollection(CollectionPath);
-            }
-
-            Array.ForEach(FontSettingsProperties, props =>
-            {
-                var propertyValue = props.GetValue(settings);
-
-                switch (propertyValue)
-                {
-                    case bool booleanValue:
-                        settingsStore.SetBoolean(CollectionPath, props.Name, booleanValue);
-                        break;
-                    case int intValue:
-                        settingsStore.SetInt32(CollectionPath, props.Name, intValue);
-                        break;
-                    case double doubleValue:
-                        settingsStore.SetString(CollectionPath, props.Name, doubleValue.ToString());
-                        break;
-                    default:
-                        settingsStore.SetString(CollectionPath, props.Name, propertyValue.ToString());
-                        break;
-                }
-            });
+            _settings = await _fontSettingsStorage.GetSettingsAsync();
         }
 
         public Typeface GetTypeface(FontOverrides type)
@@ -142,30 +55,30 @@ namespace Fontify.Services
             var defaultFontFamily = new FontFamily("Consolas");
             var typeface = new Typeface(defaultFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
-            if (!string.IsNullOrEmpty(settings.BaseFontFamily))
+            if (!string.IsNullOrEmpty(_settings.BaseFontFamily))
             {
-                defaultFontFamily = new FontFamily(settings.BaseFontFamily);
+                defaultFontFamily = new FontFamily(_settings.BaseFontFamily);
 
                 switch (type)
                 {
                     case FontOverrides.Normal:
-                        typeface = !string.IsNullOrEmpty(settings.NormalTypeface) ?
-                            new Typeface(settings.NormalTypeface) :
+                        typeface = !string.IsNullOrEmpty(_settings.NormalTypeface) ?
+                            new Typeface(_settings.NormalTypeface) :
                             new Typeface(defaultFontFamily, FontStyles.Normal, FontWeights.Regular, FontStretches.Normal);
                         break;
                     case FontOverrides.Bold:
-                        typeface = !string.IsNullOrEmpty(settings.BoldTypeface) ?
-                            new Typeface(settings.BoldTypeface) :
+                        typeface = !string.IsNullOrEmpty(_settings.BoldTypeface) ?
+                            new Typeface(_settings.BoldTypeface) :
                             new Typeface(defaultFontFamily, FontStyles.Normal, FontWeights.ExtraBold, FontStretches.Normal);
                         break;
                     case FontOverrides.Italic:
-                        typeface = !string.IsNullOrEmpty(settings.ItalicTypeface) ?
-                            new Typeface(settings.ItalicTypeface) :
+                        typeface = !string.IsNullOrEmpty(_settings.ItalicTypeface) ?
+                            new Typeface(_settings.ItalicTypeface) :
                             new Typeface(defaultFontFamily, FontStyles.Italic, FontWeights.Normal, FontStretches.Normal);
                         break;
                     case FontOverrides.BoldItalic:
-                        typeface = !string.IsNullOrEmpty(settings.BoldItalicTypeface) ?
-                            new Typeface(settings.BoldItalicTypeface) :
+                        typeface = !string.IsNullOrEmpty(_settings.BoldItalicTypeface) ?
+                            new Typeface(_settings.BoldItalicTypeface) :
                             new Typeface(defaultFontFamily, FontStyles.Italic, FontWeights.SemiBold, FontStretches.Normal);
                         break;
                 }
@@ -176,7 +89,7 @@ namespace Fontify.Services
 
         public string[] GetItalicClassifiers()
         {
-            var classifiers = settings?.ItalicClassifiers.Split(',');
+            var classifiers = _settings?.ItalicClassifiers.Split(',');
             Array.ForEach(classifiers, x => x.Trim());
             return classifiers;
         }

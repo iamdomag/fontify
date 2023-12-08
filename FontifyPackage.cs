@@ -25,7 +25,7 @@ namespace Fontify
     /// </para>
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [ProvideOptionPage(typeof(FontSettingsPage), "Fontify", "Settings", 0, 0, false)]
+    [ProvideOptionPage(typeof(FontSettingsPage), FontifyPackage.PackageName, "Settings", 0, 0, false)]
     [Guid(FontifyPackage.PackageGuidString)]
     public sealed class FontifyPackage : AsyncPackage
     {
@@ -33,7 +33,7 @@ namespace Fontify
         /// FontifyPackage GUID string.
         /// </summary>
         public const string PackageGuidString = "d56a262f-5070-46fc-8e76-c56de0e8f13d";
-
+        public const string PackageName = "Fontify";
         #region Package Members
 
         /// <summary>

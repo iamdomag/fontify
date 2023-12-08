@@ -40,12 +40,12 @@ namespace Fontify.Options.PropertyGridEx
 
             if (context.PropertyDescriptor.Name == "BaseFontFamily")
             {
-                fontList.LoadFonts(value.ToString());
+                fontList.LoadFonts(value?.ToString());
             }
             else
             {
                 var fontFamily = (context.Instance as FontSettings).BaseFontFamily;
-                fontList.LoadFonts(value.ToString(), fontFamily);
+                fontList.LoadFonts(value?.ToString(), fontFamily);
             }
 
             editorService.DropDownControl(wrapper);

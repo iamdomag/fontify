@@ -28,7 +28,7 @@ namespace Fontify.Services
         public string ItalicTypeface { get; set; }
 
         [Category("Font Defaults")]
-        [DisplayName("BolcItalic")]
+        [DisplayName("BoldItalic")]
         [Editor(typeof(FontListEditor), typeof(UITypeEditor))]
         public string BoldItalicTypeface { get; set; }
 
@@ -36,5 +36,15 @@ namespace Fontify.Services
         [DisplayName("Italic Classifiers")]
         [DefaultValue("comment,string,interface name,keyword - control,method name,namespace name")]
         public string ItalicClassifiers { get; set; } = "comment,string,interface name,keyword - control,method name,namespace name";
+
+        public void Copy(FontSettings source)
+        {
+            BaseFontFamily = source.BaseFontFamily;
+            NormalTypeface = source.NormalTypeface;
+            BoldTypeface = source.BoldTypeface;
+            ItalicTypeface = source.ItalicTypeface;
+            BoldItalicTypeface = source.BoldItalicTypeface;
+            ItalicClassifiers = source.ItalicClassifiers;
+        }
     }
 }
