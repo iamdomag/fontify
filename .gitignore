@@ -396,3 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Misc
+desktop.ini
+folderico-visual_studio_code_insider.ico
