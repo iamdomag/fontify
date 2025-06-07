@@ -1,38 +1,36 @@
-﻿using Fontify.Services;
+﻿using fontify.Contracts;
+using fontify.Model;
 using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 
-namespace Fontify.Options
+namespace fontify.Options
 {
     internal class FontSettingsPage : DialogPage
     {
-        private readonly SettingsStorage<FontSettings> _storage;
-        private FontSettings _settings;
+        private IFontSettingProvider _settingProvider;
 
-        public FontSettingsPage()
+        public FontSettingsPage(IFontSettingProvider settingProvider)
         {
-            _storage = new SettingsStorage<FontSettings>();
-            _settings = new FontSettings();
+            _settingProvider = settingProvider;
         }
 
-        public override object AutomationObject => _settings;
+        public override object AutomationObject => _settingProvider.Settings ?? new();
 
         public override void LoadSettingsFromStorage()
         {
             base.LoadSettingsFromStorage();
-            _ = ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
-                var storageValue = await _storage.GetSettingsAsync();
-                _settings.Copy(storageValue);
+                await _settingProvider.GetSettingsAsync();
             });
         }
 
         public override void SaveSettingsToStorage()
         {
             base.SaveSettingsToStorage();
-            _ = ThreadHelper.JoinableTaskFactory.RunAsync(async () => 
+            ThreadHelper.JoinableTaskFactory.Run(async () => 
             {
-                await _storage.SaveSettingsAsync(_settings);
+                await _settingProvider.SaveSettingsAsync();
             });
         }
 
@@ -40,9 +38,7 @@ namespace Fontify.Options
         {
             get
             {
-                var content = new FontSettingsPageContent();
-                content.Initialize(_settings);
-                return content;
+                return new FontSettingsPageContent(_settingProvider.Settings);
             }
         }
     }

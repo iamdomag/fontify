@@ -1,4 +1,4 @@
-﻿using Fontify.Services;
+﻿using fontify.Model;
 using System;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -10,10 +10,10 @@ namespace Fontify.Options.PropertyGridEx
 {
     public class FontListEditor : UITypeEditor
     {
-        private IWindowsFormsEditorService editorService;
-        private ElementHost wrapper = null;
-
-        public FontListEditor()
+        private IWindowsFormsEditorService _editorService;
+        private ElementHost? wrapper = null;
+        
+        public FontListEditor(IWindowsFormsEditorService editorService)
         {
             wrapper = new ElementHost
             {
@@ -24,32 +24,36 @@ namespace Fontify.Options.PropertyGridEx
             };
             ((FontDropdown)wrapper.Child).SelectionChanged += delegate (object sender, EventArgs e)
             {
-                editorService.CloseDropDown();
+                editorService?.CloseDropDown();
             };
+            _editorService = editorService;
         }
         public override bool IsDropDownResizable => true;
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context) => UITypeEditorEditStyle.DropDown;
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            var fontList = wrapper.Child as FontDropdown;
+            var fontList = wrapper?.Child as FontDropdown;
 
-            if (editorService == null)
+            if (_editorService == null)
             {
-                editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
+                _editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
             }
 
             if (context.PropertyDescriptor.Name == "BaseFontFamily")
             {
-                fontList.LoadFonts(value?.ToString());
+                fontList?.LoadFonts(value?.ToString() ?? string.Empty);
             }
             else
             {
-                var fontFamily = (context.Instance as FontSettings).BaseFontFamily;
-                fontList.LoadFonts(value?.ToString(), fontFamily);
+                var fontFamily = (context.Instance as FontSetting)?.BaseFontFamily;
+                fontList?.LoadFonts(value?.ToString() ?? string.Empty, fontFamily);
             }
 
-            editorService.DropDownControl(wrapper);
-            value = fontList.SelectedItem ?? value;
+            _editorService.DropDownControl(wrapper);
+            if (fontList?.SelectedItem != null)
+            {
+                value = fontList.SelectedItem;
+            }
 
             return base.EditValue(context, provider, value);
         }

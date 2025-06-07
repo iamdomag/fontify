@@ -1,30 +1,16 @@
-﻿using Fontify.Services;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
+﻿using fontify.Contracts;
+using fontify.Model;
 using System.Windows.Forms;
-using static System.Net.Mime.MediaTypeNames;
 
-namespace Fontify.Options
+namespace fontify.Options
 {
-    public partial class FontSettingsPageContent : UserControl
+    internal partial class FontSettingsPageContent : UserControl
     {
-        private FontSettings _settings;
-        public FontSettingsPageContent()
+        private FontSetting? _settings;
+        public FontSettingsPageContent(FontSetting? fontSetting)
         {
+            _settings = fontSetting;
             InitializeComponent();
-        }
-
-        internal void Initialize(FontSettings settings)
-        {
-            _settings = settings;
-            SettingsGrid.SelectedObject = settings;
         }
 
         private void SettingsGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -32,19 +18,22 @@ namespace Fontify.Options
             if (e.ChangedItem.PropertyDescriptor.Name == "BaseFontFamily" && !e.OldValue.Equals(e.ChangedItem.Value))
             {
                 var baseFontName = e.ChangedItem.Value.ToString();
-                if (!string.IsNullOrEmpty(baseFontName))
+                if (_settings != null)
                 {
-                    _settings.NormalTypeface = baseFontName;
-                    _settings.BoldTypeface = baseFontName;
-                    _settings.ItalicTypeface = baseFontName;
-                    _settings.BoldItalicTypeface = baseFontName;
-                }
-                else
-                {
-                    _settings.BoldTypeface = string.Empty;
-                    _settings.ItalicTypeface = string.Empty;
-                    _settings.NormalTypeface = string.Empty;
-                    _settings.BoldItalicTypeface = string.Empty;
+                    if (!string.IsNullOrEmpty(baseFontName))
+                    {
+                        _settings.NormalTypeface = baseFontName;
+                        _settings.BoldTypeface = baseFontName;
+                        _settings.ItalicTypeface = baseFontName;
+                        _settings.BoldItalicTypeface = baseFontName;
+                    }
+                    else
+                    {
+                        _settings.BoldTypeface = string.Empty;
+                        _settings.ItalicTypeface = string.Empty;
+                        _settings.NormalTypeface = string.Empty;
+                        _settings.BoldItalicTypeface = string.Empty;
+                    }
                 }
             }
         }

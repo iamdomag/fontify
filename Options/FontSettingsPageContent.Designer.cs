@@ -1,4 +1,4 @@
-﻿namespace Fontify.Options
+﻿namespace fontify.Options
 {
     partial class FontSettingsPageContent
     {

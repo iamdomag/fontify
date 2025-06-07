@@ -13,7 +13,7 @@ namespace Fontify.Options.PropertyGridEx
     public partial class FontDropdown : UserControl
     {
         public List<string> fontFamilyNames;
-        public event EventHandler SelectionChanged;
+        public event EventHandler? SelectionChanged;
         public object SelectedItem => FontNamesList.SelectedItem;
 
         public FontDropdown()
@@ -25,7 +25,7 @@ namespace Fontify.Options.PropertyGridEx
             InitializeComponent();
         }
 
-        public void LoadFonts(string currentFont, string fontFamily = null)
+        public void LoadFonts(string currentFont, string? fontFamily = null)
         {
             List<string> sourceData;
 

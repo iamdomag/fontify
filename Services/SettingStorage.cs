@@ -1,30 +1,27 @@
-﻿using Microsoft.VisualStudio.Settings;
+﻿using fontify.Contracts;
+using fontify.Model;
+using Microsoft.VisualStudio.Extensibility.VSSdkCompatibility;
+using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell.Settings;
-using Microsoft.VisualStudio.Threading;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Fontify.Services
+namespace fontify.Services
 {
-    public class SettingsStorage<T> where T: class, new()
+    public class SettingStorage<T> : ISettingStorage<T> where T: class, new()
     {
-        private ShellSettingsManager _shellSettingsCache;
+        private ShellSettingsManager? _shellSettingsCache;
         private PropertyInfo[] _properties;
         private string _collectionPath;
+        private MefInjection<IAsyncServiceProvider> _injector;
+        private readonly IServiceProvider _serviceProvider;
 
-        public SettingsStorage()
+        public SettingStorage(MefInjection<IAsyncServiceProvider> injector, IServiceProvider serviceProvider)
         {
-            _properties = typeof(T)
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .ToArray();
-            _collectionPath = $"{FontifyPackage.PackageName}\\{nameof(T)}";
+            _collectionPath = $"Fontify\\{nameof(T)}";
+            _injector = injector;
+            _serviceProvider = serviceProvider;
         }
 
         private async Task<ShellSettingsManager> GetShellSettingsManagerAsync()
@@ -32,7 +29,8 @@ namespace Fontify.Services
             if (_shellSettingsCache == null)
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                var service = await AsyncServiceProvider.GlobalProvider.GetServiceAsync(typeof(SVsSettingsManager)) as IVsSettingsManager;
+                var sp = _serviceProvider.GetService(typeof(IAsyncServiceProvider2)) as IAsyncServiceProvider2;
+                var service = await sp.GetServiceAsync(typeof(SVsSettingsManager), true) as IVsSettingsManager;
 
                 _shellSettingsCache = new ShellSettingsManager(service);
             }
@@ -40,20 +38,25 @@ namespace Fontify.Services
             return _shellSettingsCache;
         }
 
-        public async Task<T> GetSettingsAsync()
+        public async Task<T?> GetSettingsAsync()
         {
             var settingsManager = await GetShellSettingsManagerAsync();
             var settingsStore = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-            var settings = new T();
+            T? settings = null;
+
+            _properties = typeof(T)
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .ToArray();
 
             if (settingsStore.CollectionExists(_collectionPath))
             {
+                settings = new T();
                 Array.ForEach(_properties, props =>
                 {
                     if (settingsStore.PropertyExists(_collectionPath, props.Name))
                     {
                         var type = props.PropertyType;
-                        object propertyValue = null;
+                        object? propertyValue = null;
                         var typeName = type.Name;
 
                         if (typeName == typeof(Nullable<>).Name)
