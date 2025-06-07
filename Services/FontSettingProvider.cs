@@ -22,32 +22,34 @@ namespace fontify.Services
             //ThreadHelper.JoinableTaskFactory.Run(async () => _settings = await settingStorage.GetSettingsAsync());
         }
 
-        public async Task<Typeface> GetTypefaceAsync(FontOverrides type)
+        public async Task<Typeface?> GetTypefaceAsync(FontOverride type)
         {
             _settings ??= await GetSettingsAsync();
 
-            var typeface = new Typeface(new FontFamily(_settings.BaseFontFamily), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+            return GetTypeface(type);
+        }
 
-            if (!string.IsNullOrEmpty(_settings?.BaseFontFamily))
-            {
-                switch (type)
-                {
-                    case FontOverrides.Normal:
-                        typeface = new Typeface(_settings?.NormalTypeface);
-                        break;
-                    case FontOverrides.Bold:
-                        typeface = new Typeface(_settings?.BoldTypeface);
-                        break;
-                    case FontOverrides.Italic:
-                        typeface = new Typeface(_settings?.ItalicTypeface);
-                        break;
-                    case FontOverrides.BoldItalic:
-                        typeface = new Typeface(_settings?.BoldItalicTypeface);
-                        break;
-                }
-            }
+        private Typeface? GetTypeface(FontOverride type) => type switch
+        {
+            FontOverride.Normal => new Typeface(_settings?.NormalTypeface),
+            FontOverride.Bold => new Typeface(_settings?.BoldTypeface),
+            FontOverride.Italic => new Typeface(_settings?.ItalicTypeface),
+            FontOverride.BoldItalic => new Typeface(_settings?.BoldItalicTypeface),
+            FontOverride.LineNumber => new Typeface(new FontFamily("Roboto"), FontStyles.Normal, FontWeights.Light, FontStretches.Normal),
+            _ => new Typeface(new FontFamily(_settings.BaseFontFamily), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal)
+        };
 
-            return typeface;
+
+        public async Task<Dictionary<FontOverride, Typeface>> GetFontOverrides()
+        {
+            _settings ??= await GetSettingsAsync();
+            var result = new Dictionary<FontOverride, Typeface>();
+            
+            //foreach(var item in FontOverride[])
+            //{
+            //    var typeface = GetTypeface(item)
+            //}
+            throw new NotImplementedException();
         }
 
         private FontSetting GetDefaultSettings()
@@ -59,9 +61,9 @@ namespace fontify.Services
             return new FontSetting
             {
                 BaseFontFamily = defaultFontFamily.ToString(),
-                NormalTypeface = typefaces[(FontStyles.Normal, FontWeights.Normal)],
-                ItalicTypeface = typefaces[(FontStyles.Italic, FontWeights.Normal)],
-                BoldTypeface = typefaces[(FontStyles.Normal, FontWeights.Bold)],
+                NormalTypeface = typefaces[(FontStyles.Normal, FontWeights.Regular)],
+                ItalicTypeface = typefaces[(FontStyles.Italic, FontWeights.SemiBold)],
+                BoldTypeface = typefaces[(FontStyles.Normal, FontWeights.ExtraBold)],
                 BoldItalicTypeface = typefaces[(FontStyles.Italic, FontWeights.Bold)]
             };
         }

@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Formatting;
 using System.Configuration;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media;
 
@@ -17,6 +19,7 @@ namespace fontify.Services
         private Typeface boldTypeface;
         private Typeface italicTypeface;
         private Typeface bolditalicTypeface;
+        private Dictionary<FontOverride, Typeface> fontOverrides;
         private bool isLocked;
         private readonly MefInjection<IClassificationFormatMapService> _injector;
         private readonly IFontSettingProvider _settingsProvider;
@@ -81,6 +84,7 @@ namespace fontify.Services
         private async Task<Dictionary<IClassificationType?, TextFormattingRunProperties?>> GetUpdatedPropertiesAsync(IClassificationFormatMap? cfm)
         {
             var updatedItems = new Dictionary<IClassificationType?, TextFormattingRunProperties?>();
+            string[] lineNumberClassifiers = [ "line number", "Selected Line Number" ];
 
             if (cfm != null)
             {
@@ -93,8 +97,8 @@ namespace fontify.Services
                         Properties = cfm?.GetTextProperties(x),
                         ClassificationType = x
                     })
-                    .Where(x => (x.Properties?.Bold ?? false) || (x.Properties?.Italic ?? false));
-
+                    .Where(x => (x.Properties?.Bold ?? false) || (x.Properties?.Italic ?? false) || lineNumberClassifiers.Contains(x.Name));
+                
                 foreach (var item in classifiers)
                 {
                     try
@@ -107,12 +111,23 @@ namespace fontify.Services
                                 isBold ? boldTypeface :
                                 isItalic ? italicTypeface :
                                 default;
+                        var props = item?.Properties;
+
+                        if (lineNumberClassifiers.Contains(item.Name))
+                        {
+                            props = props?
+                                .SetTypeface()?
+                                .SetFontRenderingEmSize(props.FontRenderingEmSize * 0.75)?
+                                .SetFontHintingEmSize(props.FontHintingEmSize * 0.75);
+                        }
 
                         if (typeface != default)
                         {
-                            var props = item?.Properties?.SetTypeface(typeface);
+                            props = props?.SetTypeface(typeface);
+                        }
 
-                            props = isItalic ? props?.SetItalic(true) : props;
+                        if (props != item?.Properties)
+                        {
                             updatedItems.Add(item?.ClassificationType, props);
                         }
                     }
@@ -131,10 +146,10 @@ namespace fontify.Services
 
         private async Task InitializeAsync()
         {
-            normalTypeface = await _settingsProvider.GetTypefaceAsync(FontOverrides.Italic);
-            boldTypeface = await _settingsProvider.GetTypefaceAsync(FontOverrides.Italic);
-            italicTypeface = await _settingsProvider.GetTypefaceAsync(FontOverrides.Italic);
-            bolditalicTypeface = await _settingsProvider.GetTypefaceAsync(FontOverrides.Italic);
+            normalTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.Normal);
+            boldTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.Bold);
+            italicTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.Italic);
+            bolditalicTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.BoldItalic);
         }
 
         public async Task ApplyAsync(IClassificationFormatMap? cfm)

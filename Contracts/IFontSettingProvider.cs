@@ -5,17 +5,18 @@ namespace fontify.Contracts
 {
     internal interface IFontSettingProvider
     {
-        Task<Typeface> GetTypefaceAsync(FontOverrides type);
+        Task<Typeface?> GetTypefaceAsync(FontOverride type);
         FontSetting? Settings { get; }
         Task<FontSetting> GetSettingsAsync();
         Task SaveSettingsAsync();
     }
 
-    internal enum FontOverrides
+    internal enum FontOverride
     {
         Normal,
         Bold,
         Italic,
-        BoldItalic
+        BoldItalic,
+        LineNumber
     }
 }
