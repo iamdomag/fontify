@@ -47,7 +47,7 @@ namespace Fontify
                     await _fontService.ApplyAsync(cfms?.GetClassificationFormatMap("text"));
                     isRunning = false;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     isRunning = false;
                 }

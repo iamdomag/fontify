@@ -15,33 +15,26 @@ namespace fontify.Services
 {
     internal class FontCustomizationService : IFontCustomizationService
     {
-        private Typeface normalTypeface;
-        private Typeface boldTypeface;
-        private Typeface italicTypeface;
-        private Typeface bolditalicTypeface;
-        private Dictionary<FontOverride, Typeface> fontOverrides;
+        private Dictionary<FontOverrideType?, Typeface?> fontOverrides;
         private bool isLocked;
         private readonly MefInjection<IClassificationFormatMapService> _injector;
         private readonly IFontSettingProvider _settingsProvider;
 
-        public FontCustomizationService(IFontSettingProvider settingProvider, MefInjection<IClassificationFormatMapService> injector)
+        public FontCustomizationService(IFontSettingProvider settingsProvider, MefInjection<IClassificationFormatMapService> injector)
         {
             isLocked = false;
             _injector = injector;
-            _settingsProvider = settingProvider;
+            _settingsProvider = settingsProvider;
         }
 
         private async Task OverrideFormatMapAsync()
         {
             try
             {
-                //var defaultProps = cfm?.DefaultTextProperties
-                //    .SetTypeface(normalTypeface);
-                //cfm.DefaultTextProperties = defaultProps;
                 if (!isLocked)
                 {
                     isLocked = true;
-                    if (normalTypeface == null)
+                    if (fontOverrides == null)
                     {
                         await InitializeAsync();
                     }
@@ -55,7 +48,7 @@ namespace fontify.Services
                         cfm?.BeginBatchUpdate();
 
                         var defaultProps = cfm.DefaultTextProperties
-                            .SetTypeface(normalTypeface);
+                            .SetTypeface(fontOverrides[FontOverrideType.Normal]);
 
                         cfm.DefaultTextProperties = defaultProps;
 
@@ -107,16 +100,16 @@ namespace fontify.Services
                         var isBold = item?.Properties?.Bold ?? false;
                         var isBoldItalic = isBold && isItalic;
                         var typeface =
-                                isBoldItalic ? bolditalicTypeface :
-                                isBold ? boldTypeface :
-                                isItalic ? italicTypeface :
+                                isBoldItalic ? fontOverrides[FontOverrideType.BoldItalic] :
+                                isBold ? fontOverrides[FontOverrideType.Bold] :
+                                isItalic ? fontOverrides[FontOverrideType.Italic] :
                                 default;
                         var props = item?.Properties;
 
                         if (lineNumberClassifiers.Contains(item.Name))
                         {
                             props = props?
-                                .SetTypeface()?
+                                .SetTypeface(fontOverrides[FontOverrideType.LineNumber])?
                                 .SetFontRenderingEmSize(props.FontRenderingEmSize * 0.75)?
                                 .SetFontHintingEmSize(props.FontHintingEmSize * 0.75);
                         }
@@ -146,10 +139,7 @@ namespace fontify.Services
 
         private async Task InitializeAsync()
         {
-            normalTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.Normal);
-            boldTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.Bold);
-            italicTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.Italic);
-            bolditalicTypeface = await _settingsProvider.GetTypefaceAsync(FontOverride.BoldItalic);
+            fontOverrides = await _settingsProvider.GetFontOverridesAsync();
         }
 
         public async Task ApplyAsync(IClassificationFormatMap? cfm)
