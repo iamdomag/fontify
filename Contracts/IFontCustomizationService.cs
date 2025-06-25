@@ -11,7 +11,9 @@ namespace fontify.Contracts
 {
     internal interface IFontCustomizationService
     {
-        Task ApplyAsync(IClassificationFormatMap? cfm);
-        Task ClosedAsync(EditorExtensibility editor);
+        Task InitializeAsync();
+        Task ApplyAsync(ITextViewSnapshot textView);
+        Task ClosedAsync();
+        Task OverrideFormatMapAsync(bool unlock = false);
     }
 }

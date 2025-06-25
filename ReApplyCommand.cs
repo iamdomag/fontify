@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using fontify.Contracts;
 using Microsoft;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
@@ -10,23 +11,24 @@ namespace fontify
     /// Command1 handler.
     /// </summary>
     [VisualStudioContribution]
-    internal class Command1 : Command
+    internal class ReApplyCommand : Command
     {
         private readonly TraceSource logger;
-
+        private readonly IFontCustomizationService _fontService;
         /// <summary>
-        /// Initializes a new instance of the <see cref="Command1"/> class.
+        /// Initializes a new instance of the <see cref="ReApplyCommand"/> class.
         /// </summary>
         /// <param name="traceSource">Trace source instance to utilize.</param>
-        public Command1(TraceSource traceSource)
+        public ReApplyCommand(TraceSource traceSource, IFontCustomizationService fontService)
         {
             // This optional TraceSource can be used for logging in the command. You can use dependency injection to access
             // other services here as well.
-            this.logger = Requires.NotNull(traceSource, nameof(traceSource));
+            //this.logger = Requires.NotNull(traceSource, nameof(traceSource));
+            _fontService = fontService;
         }
 
         /// <inheritdoc />
-        public override CommandConfiguration CommandConfiguration => new("%fontify.Command1.DisplayName%")
+        public override CommandConfiguration CommandConfiguration => new("%fontify.ReApplyCommand.DisplayName%")
         {
             // Use this object initializer to set optional parameters for the command. The required parameter,
             // displayName, is set above. DisplayName is localized and references an entry in .vsextension\string-resources.json.
@@ -35,16 +37,17 @@ namespace fontify
         };
 
         /// <inheritdoc />
-        public override Task InitializeAsync(CancellationToken cancellationToken)
+        public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
             // Use InitializeAsync for any one-time setup or initialization.
-            return base.InitializeAsync(cancellationToken);
+            await _fontService.InitializeAsync();
+            await base.InitializeAsync(cancellationToken);
         }
 
         /// <inheritdoc />
         public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken)
         {
-            await this.Extensibility.Shell().ShowPromptAsync("Hello from an extension!", PromptOptions.OK, cancellationToken);
+            await _fontService.OverrideFormatMapAsync(true);
         }
     }
 }

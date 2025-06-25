@@ -3,6 +3,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Extensibility.Editor;
 using Microsoft.VisualStudio.Extensibility.VSSdkCompatibility;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Formatting;
 using System.Configuration;
@@ -17,28 +18,29 @@ namespace fontify.Services
     {
         private Dictionary<FontOverrideType?, Typeface?> fontOverrides;
         private bool isLocked;
-        private readonly MefInjection<IClassificationFormatMapService> _injector;
+        private readonly MefInjection<IClassificationFormatMapService> _cfmsInjector;
         private readonly IFontSettingProvider _settingsProvider;
 
-        public FontCustomizationService(IFontSettingProvider settingsProvider, MefInjection<IClassificationFormatMapService> injector)
+        public FontCustomizationService(IFontSettingProvider settingsProvider, 
+            MefInjection<IClassificationFormatMapService> cfmsInjector)
         {
             isLocked = false;
-            _injector = injector;
+            _cfmsInjector = cfmsInjector;
             _settingsProvider = settingsProvider;
         }
 
-        private async Task OverrideFormatMapAsync()
+        public async Task OverrideFormatMapAsync(bool unlock = false)
         {
             try
             {
-                if (!isLocked)
+                if (!isLocked || unlock)
                 {
                     isLocked = true;
                     if (fontOverrides == null)
                     {
                         await InitializeAsync();
                     }
-                    var cfms = await _injector.GetServiceAsync();
+                    var cfms = await _cfmsInjector.GetServiceAsync();
                     var cfm = cfms.GetClassificationFormatMap(category: "text");
                     var propertyUpdates = await GetUpdatedPropertiesAsync(cfm);
 
@@ -67,10 +69,11 @@ namespace fontify.Services
             catch (Exception ex)
             {
                 isLocked = false;
-                ErrorHandler.ExceptionToHResult(new Exception(
+                var hr = ErrorHandler.ExceptionToHResult(new Exception(
                     message: $"[Fontify] Exception occured on {ex.Source} with message {ex.Message}",
                     innerException: ex
                 ));
+                ErrorHandler.ThrowOnFailure(hr);
             }
         }
 
@@ -126,10 +129,11 @@ namespace fontify.Services
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception(
+                        var hr = ErrorHandler.ExceptionToHResult(new Exception(
                             message: $"Unable to apply font to ClassifierType: {item.Name} due to an error.",
                             innerException: ex
-                        );
+                        ));
+                        ErrorHandler.ThrowOnFailure(hr);
                     }
                 }
             }
@@ -137,17 +141,21 @@ namespace fontify.Services
             return updatedItems;
         }
 
-        private async Task InitializeAsync()
+        public async Task InitializeAsync()
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var cfms = await _cfmsInjector.GetServiceAsync();
+
             fontOverrides = await _settingsProvider.GetFontOverridesAsync();
+            await this.OverrideFormatMapAsync();
         }
 
-        public async Task ApplyAsync(IClassificationFormatMap? cfm)
+        public async Task ApplyAsync(ITextViewSnapshot textView)
         {
-            await this.OverrideFormatMapAsync();            
+            await this.InitializeAsync();       
         }
 
-        public Task ClosedAsync(EditorExtensibility editor)
+        public Task ClosedAsync()
         {
             //Cleanup tasks here
             return Task.FromResult(0);

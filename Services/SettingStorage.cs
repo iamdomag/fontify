@@ -14,13 +14,11 @@ namespace fontify.Services
         private ShellSettingsManager? _shellSettingsCache;
         private PropertyInfo[] _properties;
         private string _collectionPath;
-        private MefInjection<IAsyncServiceProvider> _injector;
         private readonly IServiceProvider _serviceProvider;
 
-        public SettingStorage(MefInjection<IAsyncServiceProvider> injector, IServiceProvider serviceProvider)
+        public SettingStorage(IServiceProvider serviceProvider)
         {
             _collectionPath = $"Fontify\\{nameof(T)}";
-            _injector = injector;
             _serviceProvider = serviceProvider;
         }
 
@@ -31,7 +29,6 @@ namespace fontify.Services
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 var sp = _serviceProvider.GetService(typeof(IAsyncServiceProvider2)) as IAsyncServiceProvider2;
                 var service = await sp.GetServiceAsync(typeof(SVsSettingsManager), true) as IVsSettingsManager;
-
                 _shellSettingsCache = new ShellSettingsManager(service);
             }
 
