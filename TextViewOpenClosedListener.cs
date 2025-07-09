@@ -1,16 +1,7 @@
 ﻿using fontify.Contracts;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Editor;
-using Microsoft.VisualStudio.Extensibility.VSSdkCompatibility;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Windows;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace Fontify
 {

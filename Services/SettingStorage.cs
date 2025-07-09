@@ -1,6 +1,4 @@
 ﻿using fontify.Contracts;
-using fontify.Model;
-using Microsoft.VisualStudio.Extensibility.VSSdkCompatibility;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -18,7 +16,7 @@ namespace fontify.Services
 
         public SettingStorage(IServiceProvider serviceProvider)
         {
-            _collectionPath = $"Fontify\\{nameof(T)}";
+            _collectionPath = $"Fontify\\{typeof(T)}";
             _serviceProvider = serviceProvider;
         }
 
